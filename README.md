@@ -61,15 +61,15 @@ kitaru agent register hermes-agent \
 Import sessions into your Kitaru server using `kitaru-hermes`:
 ```bash
 # Register the importer plugin script
-kitaru importer register kitaru/hermes \
+kitaru importer register hermes \
   --script src/kitaru_hermes/importer.py \
   --entrypoint parse \
-  --description "Importer for Hermes Agent traces" \
+  --description "Hermes Agent session importer plugin" \
   --display-version 0.1.0
 
 # Import your traces
 kitaru session import hermes-sessions.jsonl \
-  --importer kitaru/hermes@latest \
+  --importer hermes@latest \
   --agent hermes-agent@1 \
   --tag hermes-baseline \
   --wait
