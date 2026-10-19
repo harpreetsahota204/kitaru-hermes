@@ -146,13 +146,15 @@ def parse_hermes_session(record: dict[str, Any]) -> ImportedSession:
             if tool_calls:
                 node_type = NodeType.LLM_CALL
                 name = "Assistant Tool Invocation"
-                # Parse tool calls json if string
+                # Parse tool calls json if string or wrap list
                 calls_data = tool_calls
                 if isinstance(calls_data, str):
                     try:
                         calls_data = json.loads(calls_data)
                     except Exception:
-                        pass
+                        calls_data = [{"raw": tool_calls}]
+                elif not isinstance(calls_data, (list, dict)):
+                    calls_data = [{"raw": str(tool_calls)}]
                 inputs = {"role": "assistant"}
                 outputs = {"tool_calls": calls_data, "content": content}
             else:

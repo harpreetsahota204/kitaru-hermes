@@ -38,12 +38,21 @@ def export_hermes_sessions(
     con.row_factory = sqlite3.Row
     cur = con.cursor()
 
+    # Discover column names dynamically to support older and newer Hermes schemas
+    session_cols = {col[1] for col in cur.execute("PRAGMA table_info(sessions);").fetchall()}
+
+    has_tool_col = "tool_call_count" in session_cols
+    has_started_col = "started_at" in session_cols
+
     query = "SELECT * FROM sessions WHERE 1=1"
     params: list[Any] = []
-    if min_tool_calls > 0:
+    if min_tool_calls > 0 and has_tool_col:
         query += " AND tool_call_count >= ?"
         params.append(min_tool_calls)
-    query += " ORDER BY started_at DESC"
+    if has_started_col:
+        query += " ORDER BY started_at DESC"
+    else:
+        query += " ORDER BY id DESC"
     if limit is not None:
         query += " LIMIT ?"
         params.append(limit)
