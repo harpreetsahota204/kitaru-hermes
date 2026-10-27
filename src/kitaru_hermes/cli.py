@@ -28,6 +28,8 @@ def export_hermes_sessions(
     output_path: str | None = None,
     limit: int | None = None,
     min_tool_calls: int = 0,
+    source: str | None = None,
+    since_timestamp: float | None = None,
 ) -> list[dict[str, Any]]:
     """Export sessions and messages from Hermes state.db into Kitaru-ready JSON records."""
     db_file = Path(db_path).expanduser().resolve()
@@ -43,12 +45,20 @@ def export_hermes_sessions(
 
     has_tool_col = "tool_call_count" in session_cols
     has_started_col = "started_at" in session_cols
+    has_source_col = "source" in session_cols
 
     query = "SELECT * FROM sessions WHERE 1=1"
     params: list[Any] = []
     if min_tool_calls > 0 and has_tool_col:
         query += " AND tool_call_count >= ?"
         params.append(min_tool_calls)
+    if source and has_source_col:
+        query += " AND source = ?"
+        params.append(source)
+    if since_timestamp is not None and has_started_col:
+        query += " AND started_at > ?"
+        params.append(since_timestamp)
+
     if has_started_col:
         query += " ORDER BY started_at DESC"
     else:
@@ -110,6 +120,18 @@ def main() -> None:
         default=0,
         help="Only export sessions with at least N tool calls",
     )
+    parser.add_argument(
+        "--source",
+        "-s",
+        default=None,
+        help="Filter sessions by source (e.g. 'cron', 'discord', 'cli')",
+    )
+    parser.add_argument(
+        "--since",
+        type=float,
+        default=None,
+        help="Only export sessions started after this Unix timestamp",
+    )
 
     args = parser.parse_args()
     try:
@@ -118,6 +140,8 @@ def main() -> None:
             output_path=args.output,
             limit=args.limit,
             min_tool_calls=args.min_tools,
+            source=args.source,
+            since_timestamp=args.since,
         )
         print(f"Exported {len(exported)} Hermes sessions to {args.output}")
     except Exception as e:

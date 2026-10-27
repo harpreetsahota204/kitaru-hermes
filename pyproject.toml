@@ -26,6 +26,7 @@ dependencies = [
 
 [project.scripts]
 kitaru-hermes = "kitaru_hermes.cli:main"
+kitaru-hermes-sync = "kitaru_hermes.sync:main"
 
 [build-system]
 requires = ["hatchling"]
